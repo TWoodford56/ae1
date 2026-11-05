@@ -1,6 +1,7 @@
 ///FIle:
 ///INcludes rate table alongside currency codes and symbols
 ///currency conversion logic
+///Rates are accurate as of 04/11/26 via xe
 
 class Currency {
   // Creates a currency with everything needed to convert and display it.
