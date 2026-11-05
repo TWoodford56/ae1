@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ae1/widgets/TravellerCount.dart';
+import 'package:ae1/widgets/CurrencyDropwdown.dart';
 import 'package:ae1/Currency/currency.dart';
 
 void main() {
@@ -13,46 +13,30 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'TriCount',
+      title: 'Currency Converter',
       theme: ThemeData(
         colorScheme: .fromSeed(seedColor: Colors.deepOrangeAccent),
       ),
-      home: TriCount(),
+      home: CurrencyConverter(),
     );
   }
 }
 
-class TriCount extends StatefulWidget {
+class CurrencyConverter extends StatefulWidget {
   const new({super.key});
 
   @override
-  State<TriCount> createState() => _TriCountState();
+  State<CurrencyConverter> createState() => _CurrencyConverterState();
 }
 
-class _TriCountState extends State<TriCount> {
+class _CurrencyConverterState extends State<CurrencyConverter> {
   ValueChanged<double>? get onChanged => null;
 
-  int _personCount = 1;
-  double _giftPercentage = 0.0;
-  double _billTotal = 0.0;
+  CurrencyHelper ch = new CurrencyHelper();
 
-  double get _tipAmount => _billTotal * _giftPercentage;
-  double get _perPerson => (_billTotal + _tipAmount) / _personCount;
-
-  //Methods
-  void increment() {
-    setState(() {
-      _personCount = _personCount + 1;
-    });
-  }
-
-  void decrement() {
-    setState(() {
-      if (_personCount > 0) {
-        _personCount = _personCount - 1;
-      }
-    });
-  }
+  double _total = 0.0;
+  Currency fromCurrency = GBP();
+  Currency toCurrency = GBP();
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +46,10 @@ class _TriCountState extends State<TriCount> {
       fontWeight: FontWeight.bold,
     );
     return Scaffold(
-      appBar: AppBar(title: const Text('Fuel Cost Sharing')),
+      appBar: AppBar(
+        title: const Text('Currency Converter'),
+        centerTitle: true,
+      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -74,13 +61,24 @@ class _TriCountState extends State<TriCount> {
             ),
             child: Column(
               children: [
-                Text('Total Fuel Cost Per Traveller', style: style),
-                Text(
-                  '$_perPerson',
-                  style: style.copyWith(
-                    color: theme.colorScheme.onPrimary,
-                    fontSize: theme.textTheme.displaySmall?.fontSize,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    CurrencyDropdown(
+                      onCurrencyChanged: (Currency currency) {
+                        setState(() {
+                          fromCurrency = currency;
+                        });
+                      },
+                    ),
+                    CurrencyDropdown(
+                      onCurrencyChanged: (Currency currency) {
+                        setState(() {
+                          toCurrency = currency;
+                        });
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -95,54 +93,35 @@ class _TriCountState extends State<TriCount> {
               child: Column(
                 children: [
                   TextField(
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Enter Fuel Cost',
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      labelText: '${fromCurrency.sign}${fromCurrency.name}',
                     ),
                     keyboardType: TextInputType.number,
                     onChanged: (String value) {
                       setState(() {
-                        _billTotal = double.tryParse(value) ?? 0.0;
+                        _total = double.tryParse(value) ?? 0.0;
                       });
                       ;
                     },
                   ),
-
-                  //Split Bill area
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Split", style: theme.textTheme.titleMedium),
-                      TravellerCount(
-                        personCount: _personCount,
-                        theme: theme,
-                        onDecrement: decrement,
-                        onIncrement: increment,
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Tip', style: theme.textTheme.titleMedium),
-                      Text('20', style: theme.textTheme.titleMedium),
-                    ],
-                  ),
-                  Text('${(_giftPercentage * 100).round()}%'),
-                  Slider(
-                    value: _giftPercentage,
-                    onChanged: (value) {
-                      setState(() {
-                        _giftPercentage = value;
-                      });
-                      _giftPercentage = value;
-                    },
-                    min: 0,
-                    max: 0.5,
-                    divisions: 5,
-                    label: '${(_giftPercentage * 100).round()}%',
-                  ),
                 ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              height: 56,
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(5),
+                border: Border.all(color: theme.colorScheme.primary, width: 1),
+              ),
+              child: Text(
+                '${toCurrency.sign}${ch.calculateCurrency(fromCurrency, toCurrency, _total)}',
+                style: theme.textTheme.bodyLarge,
               ),
             ),
           ),
