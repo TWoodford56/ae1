@@ -23,13 +23,21 @@ class MyApp extends StatelessWidget {
 }
 
 class CurrencyConverter extends StatefulWidget {
-  const new({super.key});
+  const CurrencyConverter({super.key});
 
   @override
   State<CurrencyConverter> createState() => _CurrencyConverterState();
 }
 
 class _CurrencyConverterState extends State<CurrencyConverter> {
+  void _swapCurrencies() {
+    setState(() {
+      Currency temp = fromCurrency;
+      fromCurrency = toCurrency;
+      toCurrency = temp;
+    });
+  }
+
   ValueChanged<double>? get onChanged => null;
 
   CurrencyHelper ch = new CurrencyHelper();
@@ -45,6 +53,11 @@ class _CurrencyConverterState extends State<CurrencyConverter> {
       color: theme.colorScheme.onPrimary,
       fontWeight: FontWeight.bold,
     );
+
+    double fxRate = (1 / fromCurrency.unitsPerPound) * toCurrency.unitsPerPound;
+
+    double fxRate2DC = double.parse(fxRate.toStringAsFixed(3));
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Currency Converter'),
@@ -71,6 +84,23 @@ class _CurrencyConverterState extends State<CurrencyConverter> {
                         });
                       },
                     ),
+
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.inversePrimary,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '1 : ${(fxRate2DC)}',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+
                     CurrencyDropdown(
                       onCurrencyChanged: (Currency currency) {
                         setState(() {
@@ -122,6 +152,22 @@ class _CurrencyConverterState extends State<CurrencyConverter> {
               child: Text(
                 '${toCurrency.sign}${ch.calculateCurrency(fromCurrency, toCurrency, _total)}',
                 style: theme.textTheme.bodyLarge,
+              ),
+            ),
+          ),
+          const Spacer(),
+
+          Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: Center(
+              child: IconButton(
+                onPressed: _swapCurrencies,
+                icon: const Icon(Icons.swap_horiz_rounded, size: 35),
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.deepOrangeAccent,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.all(12),
+                ),
               ),
             ),
           ),
