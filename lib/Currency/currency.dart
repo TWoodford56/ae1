@@ -1,72 +1,47 @@
-import 'package:flutter/material.dart';
+///FIle:
+///INcludes rate table alongside currency codes and symbols
+///currency conversion logic
 
 class Currency {
+  // Creates a currency with everything needed to convert and display it.
   const Currency({
-    required this.unitsPerPound,
-    required this.sign,
     required this.name,
+    required this.sign,
+    required this.unitsPerPound,
   });
 
-  final double unitsPerPound;
-  final String sign;
+  // Three-letter code shown in the UI, e.g. `USD`.
   final String name;
+
+  // Symbol shown before amounts, e.g. `$`.
+  final String sign;
+
+  // How many units of this currency are equal to 1 GBP.
+  final double unitsPerPound;
 }
 
+/// list of currencies
+const List<Currency> supportedCurrencies = [
+  Currency(name: 'GBP', sign: '£', unitsPerPound: 1),
+  Currency(name: 'USD', sign: '\$', unitsPerPound: 1.34),
+  Currency(name: 'EUR', sign: '€', unitsPerPound: 1.19),
+  Currency(name: 'JPY', sign: '¥', unitsPerPound: 213),
+  Currency(name: 'HUF', sign: 'Ft', unitsPerPound: 435),
+  Currency(name: 'NGN', sign: '₦', unitsPerPound: 1814.10),
+];
+
+/// Conversion class
 class CurrencyHelper {
-  final List<Currency> currencies = [GBP(), EUR(), USD(), HUF(), JPY(), NGN()];
+  double rate(Currency from, Currency to) =>
+      to.unitsPerPound / from.unitsPerPound;
 
-  double calculateCurrency(Currency c1, Currency c2, double Total) {
-    double gbpAmount = Total / c1.unitsPerPound;
+  // Converts from one currency into the other
+  double convert(Currency from, Currency to, double amount) =>
+      amount * rate(from, to);
 
-    double conversion = gbpAmount * c2.unitsPerPound;
-    return double.parse(conversion.toStringAsFixed(2));
-  }
-}
-
-class GBP extends Currency {
-  const GBP({
-    double value = 1,
-    String symbol = '£',
-    String currencyName = 'GBP',
-  }) : super(unitsPerPound: value, sign: symbol, name: currencyName);
-}
-
-class USD extends Currency {
-  const USD({
-    double value = 1.34,
-    String symbol = '\$',
-    String currencyName = 'USD',
-  }) : super(unitsPerPound: value, sign: symbol, name: currencyName);
-}
-
-class EUR extends Currency {
-  const EUR({
-    double value = 1.19,
-    String symbol = '€',
-    String currencyName = 'EUR',
-  }) : super(unitsPerPound: value, sign: symbol, name: currencyName);
-}
-
-class JPY extends Currency {
-  const JPY({
-    double value = 213,
-    String symbol = '¥',
-    String currencyName = 'JPY',
-  }) : super(unitsPerPound: value, sign: symbol, name: currencyName);
-}
-
-class NGN extends Currency {
-  const NGN({
-    double value = 1814.10,
-    String symbol = '₦',
-    String currencyName = 'NGN',
-  }) : super(unitsPerPound: value, sign: symbol, name: currencyName);
-}
-
-class HUF extends Currency {
-  const HUF({
-    double value = 435,
-    String symbol = 'Ft',
-    String currencyName = 'HUF',
-  }) : super(unitsPerPound: value, sign: symbol, name: currencyName);
+  // limits decimal points to 2 for the amounts
+  String formatAmount(double value) => value.toStringAsFixed(2);
+  //limits decimal points to 5 for the rates
+  String formatRate(double rate) =>
+      double.parse(rate.toStringAsFixed(5)).toString();
 }

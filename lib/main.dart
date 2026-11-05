@@ -17,11 +17,12 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: .fromSeed(seedColor: Colors.deepOrangeAccent),
       ),
-      home: CurrencyConverter(),
+      home: const CurrencyConverter(),
     );
   }
 }
 
+// The converter screen.
 class CurrencyConverter extends StatefulWidget {
   const CurrencyConverter({super.key});
 
@@ -30,6 +31,14 @@ class CurrencyConverter extends StatefulWidget {
 }
 
 class _CurrencyConverterState extends State<CurrencyConverter> {
+  CurrencyHelper ch = CurrencyHelper();
+
+  // Amount typed by the user, empty = 0
+  double _total = 0.0;
+  Currency fromCurrency = supportedCurrencies[1]; // USD
+  Currency toCurrency = supportedCurrencies[0]; // GBP
+
+  // Swaps the "from" and "to" currencies in one action.
   void _swapCurrencies() {
     setState(() {
       Currency temp = fromCurrency;
@@ -38,25 +47,14 @@ class _CurrencyConverterState extends State<CurrencyConverter> {
     });
   }
 
-  ValueChanged<double>? get onChanged => null;
-
-  CurrencyHelper ch = new CurrencyHelper();
-
-  double _total = 0.0;
-  Currency fromCurrency = GBP();
-  Currency toCurrency = GBP();
-
   @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
-    final style = theme.textTheme.titleMedium!.copyWith(
-      color: theme.colorScheme.onPrimary,
-      fontWeight: FontWeight.bold,
+
+    double fxRate = ch.rate(fromCurrency, toCurrency);
+    String result = ch.formatAmount(
+      ch.convert(fromCurrency, toCurrency, _total),
     );
-
-    double fxRate = (1 / fromCurrency.unitsPerPound) * toCurrency.unitsPerPound;
-
-    double fxRate2DC = double.parse(fxRate.toStringAsFixed(3));
 
     return Scaffold(
       appBar: AppBar(
@@ -66,107 +64,117 @@ class _CurrencyConverterState extends State<CurrencyConverter> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.inversePrimary,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    CurrencyDropdown(
-                      onCurrencyChanged: (Currency currency) {
-                        setState(() {
-                          fromCurrency = currency;
-                        });
-                      },
-                    ),
-
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.inversePrimary,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '1 : ${(fxRate2DC)}',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-
-                    CurrencyDropdown(
-                      onCurrencyChanged: (Currency currency) {
-                        setState(() {
-                          toCurrency = currency;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Container(
+              padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(5),
+                borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: theme.colorScheme.primary, width: 2),
               ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextField(
-                    decoration: InputDecoration(
-                      border: const OutlineInputBorder(),
-                      labelText: '${fromCurrency.sign}${fromCurrency.name}',
-                    ),
-                    keyboardType: TextInputType.number,
-                    onChanged: (String value) {
-                      setState(() {
-                        _total = double.tryParse(value) ?? 0.0;
-                      });
-                      ;
-                    },
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          decoration: InputDecoration(
+                            border: const OutlineInputBorder(),
+                            labelText:
+                                '${fromCurrency.sign}${fromCurrency.name}',
+                          ),
+                          keyboardType: TextInputType.number,
+                          onChanged: (String value) {
+                            setState(() {
+                              // negative or invalid input counts as 0
+                              _total = (double.tryParse(value) ?? 0.0)
+                                  .clamp(0.0, 1e12)
+                                  .toDouble();
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      CurrencyDropdown(
+                        value: fromCurrency,
+                        onCurrencyChanged: (Currency currency) {
+                          setState(() {
+                            fromCurrency = currency;
+                          });
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Container(
-              height: 56,
-              alignment: Alignment.centerLeft,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(5),
-                border: Border.all(color: theme.colorScheme.primary, width: 1),
-              ),
-              child: Text(
-                '${toCurrency.sign}${ch.calculateCurrency(fromCurrency, toCurrency, _total)}',
-                style: theme.textTheme.bodyLarge,
+
+          // swap button between the two currencies
+          Center(
+            child: IconButton(
+              onPressed: _swapCurrencies,
+              icon: const Icon(Icons.swap_vert_rounded, size: 35),
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.deepOrangeAccent,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.all(12),
               ),
             ),
           ),
-          const Spacer(),
 
+          // "They receive": converted amount and the to currency
           Padding(
-            padding: const EdgeInsets.only(bottom: 20),
-            child: Center(
-              child: IconButton(
-                onPressed: _swapCurrencies,
-                icon: const Icon(Icons.swap_horiz_rounded, size: 35),
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.deepOrangeAccent,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.inversePrimary,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${toCurrency.sign}$result',
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      CurrencyDropdown(
+                        value: toCurrency,
+                        onCurrencyChanged: (Currency currency) {
+                          setState(() {
+                            toCurrency = currency;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Center(
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.inversePrimary,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '1 ${fromCurrency.name} = ${ch.formatRate(fxRate)} ${toCurrency.name}',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onPrimaryContainer,
                 ),
               ),
             ),

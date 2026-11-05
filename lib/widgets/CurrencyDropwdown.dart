@@ -1,45 +1,45 @@
 import 'package:ae1/Currency/currency.dart';
 import 'package:flutter/material.dart';
 
-class CurrencyDropdown extends StatefulWidget {
-  const CurrencyDropdown({super.key, required this.onCurrencyChanged});
+/// A dropdown for choosing a currency
+class CurrencyDropdown extends StatelessWidget {
+  // Creates a dropdown showing currency codes of provided currencies
+  const CurrencyDropdown({
+    super.key,
+    required this.value,
+    required this.onCurrencyChanged,
+  });
 
-  final Function(Currency) onCurrencyChanged;
+  // The currently selected currency.
+  final Currency value;
 
-  @override
-  State<CurrencyDropdown> createState() => _CurrencyDropdownState();
-}
-
-class _CurrencyDropdownState extends State<CurrencyDropdown> {
-  List<Currency> currencies = [GBP(), EUR(), USD(), HUF(), JPY(), NGN()];
-
-  String selectedCurrency = GBP().name;
+  // Called with the newly chosen currency.
+  final ValueChanged<Currency> onCurrencyChanged;
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButton<String>(
-      value: selectedCurrency,
-
-      items: currencies.map((Currency currency) {
-        return DropdownMenuItem<String>(
-          value: currency.name,
-          child: Text(currency.name),
-        );
-      }).toList(),
-
-      onChanged: (String? newValue) {
-        if (newValue != null) {
-          setState(() {
-            selectedCurrency = newValue;
-
-            Currency chosenCurrency = currencies.firstWhere(
-              (currency) => currency.name == newValue,
-            );
-
-            widget.onCurrencyChanged(chosenCurrency);
-          });
-        }
-      },
+    final theme = Theme.of(context);
+    return DropdownButtonHideUnderline(
+      child: DropdownButton<String>(
+        value: value.name,
+        borderRadius: BorderRadius.circular(12),
+        style: theme.textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: theme.colorScheme.onSurface,
+        ),
+        items: supportedCurrencies.map((Currency currency) {
+          return DropdownMenuItem<String>(
+            value: currency.name,
+            child: Text('${currency.sign}  ${currency.name}'),
+          );
+        }).toList(),
+        onChanged: (String? newValue) {
+          if (newValue == null) return;
+          onCurrencyChanged(
+            supportedCurrencies.firstWhere((c) => c.name == newValue),
+          );
+        },
+      ),
     );
   }
 }
