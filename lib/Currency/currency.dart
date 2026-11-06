@@ -24,7 +24,7 @@ class Currency {
 /// list of currencies
 const List<Currency> supportedCurrencies = [
   Currency(name: 'GBP', sign: '£', unitsPerPound: 1),
-  Currency(name: 'USD', sign: '\$', unitsPerPound: 1.34),
+  Currency(name: 'USD', sign: '\$', unitsPerPound: 1.34), //brief provides different rate, however i wanted consistent rates at the date stated at the top
   Currency(name: 'EUR', sign: '€', unitsPerPound: 1.19),
   Currency(name: 'JPY', sign: '¥', unitsPerPound: 213),
   Currency(name: 'HUF', sign: 'Ft', unitsPerPound: 435),
